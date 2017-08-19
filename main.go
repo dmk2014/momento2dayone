@@ -16,7 +16,7 @@ func main() {
 	// TODO
 	// Retrieve arguments from command line instead of hard coding
 	// Validate that file exists
-	// Investiagte image validation, approach if image not found
+	// Investigate image validation, approach if image not found
 	// Check for images that exist and are not used?
 
 	if runtime.GOOS != "darwin" {
