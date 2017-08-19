@@ -35,6 +35,19 @@ func main() {
 	}
 	defer file.Close()
 
+	// Discard BOM
+	const (
+		bom0 = 0xEF
+		bom1 = 0xBB
+		bom2 = 0xBF
+	)
+	reader := bufio.NewReader(file)
+	if b, err := reader.Peek(3); err == nil {
+		if b[0] == bom0 && b[1] == bom1 && b[2] == bom2 {
+			reader.Discard(3)
+		}
+	}
+
 	dateRegex := regexp.MustCompile(`[0-9]{1,2}\s[a-zA-Z]{3,9}\s[0-9]{4}`)
 	timeRegex := regexp.MustCompile(`[0-9]{2}:[0-9]{2}`)
 	placeRegex := regexp.MustCompile(`At: ([^:]+)`)
@@ -63,7 +76,7 @@ func main() {
 	// This strips any EOL marker, which is of form `\r?\n`. Thus we do not need to fix the file.
 	// Include a note on this in repo, linking to the Go documentation as appropriate. Line returned
 	// will simply be empty string if EOL.
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
 
 	// Buffer to join strings. Much improved performance over naive concatenation (tested at ~90k lines, 20s - 0.1s)
 	buffer := bytes.Buffer{}
@@ -90,7 +103,7 @@ func main() {
 				if momentCount > 0 {
 					m.Text = strings.TrimSpace(buffer.String())
 					n := Moment(m)
-					moments[momentCount] = n
+					moments[momentCount-1] = n
 				}
 
 				// New Moment
