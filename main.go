@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"runtime"
 	"strings"
@@ -147,13 +148,84 @@ func main() {
 	fmt.Printf("Parse Complete (%fs)\n", duration.Seconds())
 	fmt.Printf("Moments Found: %d\n", momentCount)
 
-	os.Exit(0)
+	// Save Moments
+	months := make(map[string]string)
+	months["January"] = "01"
+	months["Feburary"] = "02"
+	months["March"] = "03"
+	months["April"] = "04"
+	months["May"] = "05"
+	months["June"] = "06"
+	months["July"] = "07"
+	months["August"] = "08"
+	months["September"] = "09"
+	months["October"] = "10"
+	months["November"] = "11"
+	months["December"] = "12"
 
-	// TODO: Save Moments.
-	// test := exec.Command("dayone2", "new", `Text Here`, "-t", `One\ Tag`, "-d", "2017/08/01")
-	// if err = test.Run(); err != nil {
-	// 	panic(err)
-	// }
+	start = time.Now()
+
+	for i := 0; i < 1; i++ {
+		d := moments[i]
+
+		args := make([]string, 0, 10)
+
+		// Text
+		args = append(args, "new")
+		args = append(args, d.Text)
+
+		// Date (yyyy-mm-dd [hh:mm])
+		dateParts := strings.Split(d.Date, " ")
+		day := dateParts[0]
+		month := months[dateParts[1]]
+		year := dateParts[2]
+		date := fmt.Sprintf("%s-%s-%s %s", year, month, day, d.Time)
+		args = append(args, "-d")
+		args = append(args, date)
+
+		// Tags
+		if len(d.Tags) > 0 || len(d.People) > 0 || len(d.Places) > 0 {
+			args = append(args, "-t")
+			args = append(args, d.Tags...)
+			args = append(args, d.People...)
+			args = append(args, d.Places...)
+		}
+
+		// Images (DayOne2 does not support video at present)
+		if len(d.Media) > 0 {
+			images := make([]string, 0, len(d.Media))
+
+			for _, media := range d.Media {
+				absPath := path.Join("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04/Attachments", media)
+				if path.Ext(absPath) != ".jpg" {
+					// TODO: Log media not added
+					continue
+				}
+				images = append(images, absPath)
+			}
+
+			if len(images) > 0 {
+				args = append(args, "-p")
+				args = append(args, images...)
+			}
+		}
+
+		// Ignore Standard In (default behaviour if no text argument provided)
+		args = append(args, "--no-stdin")
+
+		cmd := exec.Command("dayone2", args...)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			// TODO: We will continue, log output/error
+			fmt.Println(string(output))
+			fmt.Println(err)
+		}
+	}
+
+	duration = time.Since(start)
+	fmt.Printf("Import Complete (%fs)\n", duration.Seconds())
+
+	os.Exit(0)
 }
 
 func escapeTags(tags *[]string) {
