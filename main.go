@@ -228,11 +228,6 @@ func main() {
 	os.Exit(0)
 }
 
-func escapeTags(tags *[]string) {
-	// TODO
-	// e.g. "Tag Space" -> "Tag\ Space"
-}
-
 func isDateCandidate(text string) bool {
 	return len(text) >= 10 && len(text) <= 17
 }
