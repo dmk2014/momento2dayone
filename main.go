@@ -1,16 +1,15 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/dmk2014/momento2dayone/momento"
 )
 
 func main() {
@@ -30,123 +29,23 @@ func main() {
 		os.Exit(2)
 	}
 
-	file, err := os.Open("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04/Export.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	// Discard BOM
-	const (
-		bom0 = 0xEF
-		bom1 = 0xBB
-		bom2 = 0xBF
-	)
-	reader := bufio.NewReader(file)
-	if b, err := reader.Peek(3); err == nil {
-		if b[0] == bom0 && b[1] == bom1 && b[2] == bom2 {
-			reader.Discard(3)
-		}
-	}
-
-	dateRegex := regexp.MustCompile(`[0-9]{1,2}\s[a-zA-Z]{3,9}\s[0-9]{4}`)
-	timeRegex := regexp.MustCompile(`[0-9]{2}:[0-9]{2}`)
-	placeRegex := regexp.MustCompile(`At: ([^:]+)`)
-
-	dateNextLinePrefix := "=========="
-
-	type Moment struct {
-		Date   string
-		Time   string
-		Text   string
-		People []string
-		Places []string
-		Tags   []string
-		Media  []string
-	}
-
-	var m Moment
-	moments := make([]Moment, 6200)
-
-	momentCount := 0
-	currentDate := ""
-	expectedMoments := 6134
-
-	// Read file using a Scanner
-	// NewScanner creates a Scanner using the default Split Function function, ScanLines.
-	// This strips any EOL marker, which is of form `\r?\n`. Thus we do not need to fix the file.
-	// Include a note on this in repo, linking to the Go documentation as appropriate. Line returned
-	// will simply be empty string if EOL.
-	scanner := bufio.NewScanner(reader)
-
-	// Buffer to join strings. Much improved performance over naive concatenation (tested at ~90k lines, 20s - 0.1s)
-	buffer := bytes.Buffer{}
-
 	start := time.Now()
-
-	for scanner.Scan() {
-		text := scanner.Text()
-
-		// Assumptions: no Time or Date in Moment text (that would match length followed by regex)
-		if isDateCandidate(text) {
-			if dateRegex.MatchString(text) {
-				scanner.Scan()
-				nextLine := scanner.Text()
-				if strings.HasPrefix(nextLine, dateNextLinePrefix) {
-					currentDate = text
-					continue
-				}
-			}
-		} else if isTimeCandidate(text) {
-			if timeRegex.MatchString(text) {
-
-				// Store Moment in Slice
-				if momentCount > 0 {
-					m.Text = strings.TrimSpace(buffer.String())
-					n := Moment(m)
-					moments[momentCount-1] = n
-				}
-
-				// New Moment
-				m = Moment{}
-				m.Date = currentDate
-				m.Time = text
-				momentCount++
-				buffer.Reset()
-
-				continue
-			}
-		}
-
-		if isPlace(text) {
-			text = placeRegex.FindStringSubmatch(text)[1] // submatch -> 0 is entire string, first capture group is at 1
-			m.Places = append(m.Places, text)
-		} else if isPeople(text) {
-			text = strings.Replace(text, "With: ", "", 1)
-			m.People = strings.Split(text, ", ")
-		} else if isTags(text) {
-			text = strings.Replace(text, "Tags: ", "", 1)
-			m.Tags = strings.Split(text, ", ")
-		} else if isMedia(text) {
-			text = strings.Replace(text, "Media: ", "", 1)
-			m.Media = append(m.Media, text)
-		} else {
-			buffer.WriteString(text)
-			buffer.WriteString("\n")
-		}
+	moments, err := momento.Parse("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04/Export.txt")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(3)
 	}
-
 	duration := time.Since(start)
+	fmt.Printf("Parse Complete (%fs)\n", duration.Seconds())
+	fmt.Printf("Moments Found: %d\n", len(moments))
 
-	if scanner.Err() != nil {
-		panic(err)
-	}
-	if expectedMoments != momentCount {
+	fmt.Println(moments[6132])
+	os.Exit(0)
+
+	expectedMoments := 6134
+	if expectedMoments != len(moments) {
 		// TODO
 	}
-
-	fmt.Printf("Parse Complete (%fs)\n", duration.Seconds())
-	fmt.Printf("Moments Found: %d\n", momentCount)
 
 	// Save Moments
 	months := make(map[string]string)
@@ -226,28 +125,4 @@ func main() {
 	fmt.Printf("Import Complete (%fs)\n", duration.Seconds())
 
 	os.Exit(0)
-}
-
-func isDateCandidate(text string) bool {
-	return len(text) >= 10 && len(text) <= 17
-}
-
-func isTimeCandidate(text string) bool {
-	return len(text) == 5
-}
-
-func isPlace(text string) bool {
-	return strings.HasPrefix(text, "At:")
-}
-
-func isPeople(text string) bool {
-	return strings.HasPrefix(text, "With:")
-}
-
-func isTags(text string) bool {
-	return strings.HasPrefix(text, "Tags:")
-}
-
-func isMedia(text string) bool {
-	return strings.HasPrefix(text, "Media:")
 }
