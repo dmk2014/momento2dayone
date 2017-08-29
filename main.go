@@ -43,8 +43,16 @@ func main() {
 		// TODO
 	}
 
+	// https://npf.io/2014/05/intro-to-go-interfaces/
+	// https://stackoverflow.com/questions/12994679/golang-slice-of-struct-slice-of-interface-it-implements
+	// TODO: research pointer receivers, conversion and duplication issue when using &m
+	entries := make([]dayone.DayOne, len(moments))
+	for i, m := range moments {
+		entries[i] = dayone.DayOne(m)
+	}
+
 	start = time.Now()
-	dayone.Import(moments)
+	dayone.Import(entries)
 	duration = time.Since(start)
 	fmt.Printf("Import Complete (%fs)\n", duration.Seconds())
 
