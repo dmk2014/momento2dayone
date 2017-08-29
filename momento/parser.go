@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -13,33 +14,106 @@ import (
 
 // Moment is a represenation of an entry in a Momento journal.
 type Moment struct {
-	Date   string
-	Time   string
-	Text   string
-	People []string
-	Places []string
-	Tags   []string
-	Media  []string
+	date   string
+	time   string
+	text   string
+	people []string
+	places []string
+	tags   []string
+	media  []string
+}
+
+func (m *Moment) setDate(date, time string) {
+	m.date = date
+	m.time = time
+}
+
+func (m *Moment) setText(text string) {
+	m.text = text
 }
 
 func (m *Moment) appendPlace(text string) {
-	text = placeRegex.FindStringSubmatch(text)[1] // submatch -> 0 is entire string, first capture group is at 1
-	m.Places = append(m.Places, text)
+	text = placeRegex.FindStringSubmatch(text)[1]
+	m.places = append(m.places, text)
 }
 
 func (m *Moment) setPeople(text string) {
 	text = strings.Replace(text, "With: ", "", 1)
-	m.People = strings.Split(text, ", ")
+	m.people = strings.Split(text, ", ")
 }
 
 func (m *Moment) setTags(text string) {
 	text = strings.Replace(text, "Tags: ", "", 1)
-	m.Tags = strings.Split(text, ", ")
+	m.tags = strings.Split(text, ", ")
 }
 
 func (m *Moment) appendMedia(text string) {
 	text = strings.Replace(text, "Media: ", "", 1)
-	m.Media = append(m.Media, text)
+	m.media = append(m.media, text)
+}
+
+func (m *Moment) isValid() bool {
+	return m.date != "" && m.time != ""
+}
+
+// ISODate returns an ISO 8601 date.
+func (m Moment) ISODate() string {
+	// TODO: Currently implements yyyy-mm-dd [hh:mm[:ss]] [AM|PM]
+	// Implement as ISODate
+	dateParts := strings.Split(m.date, " ")
+	day := dateParts[0]
+	month := months[dateParts[1]]
+	year := dateParts[2]
+	return fmt.Sprintf("%s-%s-%s %s", year, month, day, m.time)
+}
+
+// Text returns the entry content.
+func (m Moment) Text() string {
+	return m.text
+}
+
+// Tags returns a combined slice of Tags, People and Places.
+func (m Moment) Tags() []string {
+	tags := make([]string, 0, len(m.tags)+len(m.people)+len(m.places))
+	if len(m.tags) > 0 {
+		tags = append(tags, m.tags...)
+	}
+	if len(m.people) > 0 {
+		tags = append(tags, m.people...)
+	}
+	if len(m.places) > 0 {
+		tags = append(tags, m.places...)
+	}
+	return tags
+}
+
+// Media returns a slice of all media that ends with the specified suffix.
+func (m Moment) Media(suffix string) []string {
+	media := make([]string, 0, len(m.media))
+	if len(m.media) == 0 {
+		return media
+	}
+	for _, m := range m.media {
+		if strings.HasSuffix(m, suffix) {
+			media = append(media, m)
+		}
+	}
+	return media
+}
+
+var months = map[string]string{
+	"January":   "01",
+	"Feburary":  "02",
+	"March":     "03",
+	"April":     "04",
+	"May":       "05",
+	"June":      "06",
+	"July":      "07",
+	"August":    "08",
+	"September": "09",
+	"October":   "10",
+	"November":  "11",
+	"December":  "12",
 }
 
 // Regular Expressions required during Parse.
@@ -96,15 +170,14 @@ func Parse(p string) (moments []Moment, err error) {
 			}
 
 			// Store Moment
-			if m.Time != "" {
-				m.Text = strings.TrimSpace(buffer.String())
+			if m.isValid() {
+				m.setText(strings.TrimSpace(buffer.String()))
 				moments = append(moments, m)
 			}
 
 			// New Moment
 			m = Moment{}
-			m.Date = currentDate
-			m.Time = text
+			m.setDate(currentDate, text)
 			buffer.Reset()
 
 			continue
@@ -125,7 +198,7 @@ func Parse(p string) (moments []Moment, err error) {
 	}
 
 	// Store the last Moment
-	m.Text = strings.TrimSpace(buffer.String())
+	m.setText(strings.TrimSpace(buffer.String()))
 	moments = append(moments, m)
 
 	return
