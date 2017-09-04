@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"time"
 
@@ -28,11 +29,23 @@ func main() {
 		os.Exit(2)
 	}
 
+	// Parse File
+	basePath := "/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04"
+	exportPath := path.Join(basePath, "Export.txt")
+	mediaPath := path.Join(basePath, "Attachments")
+
+	file, err := os.Open(exportPath)
+	if err != nil {
+		fmt.Printf("could not open Momento export")
+		os.Exit(3)
+	}
+	defer file.Close()
+
 	start := time.Now()
-	moments, err := momento.Parse("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04/Export.txt")
+	moments, err := momento.Parse(file, mediaPath)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(3)
+		os.Exit(4)
 	}
 	duration := time.Since(start)
 	fmt.Printf("Parse Complete (%fs)\n", duration.Seconds())
@@ -42,6 +55,8 @@ func main() {
 	if expectedMoments != len(moments) {
 		// TODO
 	}
+
+	// Import to DayOne
 
 	// https://npf.io/2014/05/intro-to-go-interfaces/
 	// https://stackoverflow.com/questions/12994679/golang-slice-of-struct-slice-of-interface-it-implements
