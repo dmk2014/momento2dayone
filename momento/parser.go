@@ -3,10 +3,8 @@ package momento
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -47,9 +45,10 @@ func (m *Moment) setTags(text string) {
 	m.tags = strings.Split(text, ", ")
 }
 
-func (m *Moment) appendMedia(text string) {
+func (m *Moment) appendMedia(mediaPath, text string) {
 	text = strings.Replace(text, "Media: ", "", 1)
-	m.media = append(m.media, text)
+	location := path.Join(mediaPath, text)
+	m.media = append(m.media, location)
 }
 
 func (m *Moment) isValid() bool {
@@ -123,21 +122,12 @@ var placeRegex = regexp.MustCompile(`At: ([^:]+)`)
 
 var dateNextLinePrefix = "=========="
 
-// Parse extracts any Moments from the file at the provided path and
-// returns a slice containing all extracted Moments. Error will be
-// returned if the file is invalid.
-func Parse(p string) (moments []Moment, err error) {
-	if path.Ext(p) != ".txt" {
-		err = errors.New("file at p must be of type of .txt")
-		return
-	}
-
-	file, err := os.Open(p)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
+// Parse extracts any Moments from the provided io.Reader and returns
+// them in a slice. The media path should be a location containing all
+// media files encountered during parse. This location is not validated.
+// Err will be non-nil should an error be encounterd while parsing the
+// io.Reader contents.
+func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	m := Moment{}
 	moments = make([]Moment, 0, 6200)
 	currentDate := ""
@@ -145,7 +135,7 @@ func Parse(p string) (moments []Moment, err error) {
 	// Buffer to join strings. Much improved performance over naive concatenation (tested at ~90k lines, 20s - 0.1s)
 	buffer := bytes.Buffer{}
 
-	scanner := bufio.NewScanner(discardBOM(file))
+	scanner := bufio.NewScanner(discardBOM(reader))
 	for scanner.Scan() {
 		text := scanner.Text()
 
@@ -190,7 +180,7 @@ func Parse(p string) (moments []Moment, err error) {
 		} else if isTags(text) {
 			m.setTags(text)
 		} else if isMedia(text) {
-			m.appendMedia(text)
+			m.appendMedia(mediaPath, text)
 		} else {
 			buffer.WriteString(text)
 			buffer.WriteString("\n")
@@ -200,6 +190,10 @@ func Parse(p string) (moments []Moment, err error) {
 	// Store the last Moment
 	m.setText(strings.TrimSpace(buffer.String()))
 	moments = append(moments, m)
+
+	if err = scanner.Err(); err != nil {
+		return
+	}
 
 	return
 }
