@@ -188,8 +188,10 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	}
 
 	// Store the last Moment
-	m.setText(strings.TrimSpace(buffer.String()))
-	moments = append(moments, m)
+	if m.isValid() {
+		m.setText(strings.TrimSpace(buffer.String()))
+		moments = append(moments, m)
+	}
 
 	if err = scanner.Err(); err != nil {
 		return
