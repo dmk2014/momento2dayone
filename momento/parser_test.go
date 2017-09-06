@@ -1,6 +1,7 @@
 package momento
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -12,30 +13,78 @@ func TestParse(t *testing.T) {
 
 00:00
 Hello, millenium!
-At: Home: 1 Road Drive, Country (0.00000000, -0.000000)
+With: Joe Bloggs, John Smith
+At: Home: 1 Road Drive, Country (0.00000000, -0.00000000)
 Tags: New Year, Millenium
-Media: MEDIA_001.jpg`
+Media: MEDIA_005.mp4
+Media: MEDIA_109.jpg`
 
 	reader := strings.NewReader(export)
-
 	result, err := Parse(reader, "/dev/null")
 	if err != nil {
-		t.Fatal("parse error")
+		t.Fatalf("Parse error. %v", err)
 	}
 
 	if len(result) != 1 {
-		t.Fatal("moment count not equal to expected")
+		t.Fatalf("Moment count not equal to expected. %d %d", 1, len(result))
 	}
 
 	moment := result[0]
 
-	if moment.date != "1 January 2000" {
-		t.Fatal("moment date not equal to expected")
+	// Test Basic Properties From Parse
+	expectedDate := "1 January 2000"
+	if moment.date != expectedDate {
+		t.Errorf("Moment date not equal to expected. %v %v", moment.date, expectedDate)
 	}
-	if moment.time != "00:00" {
-		t.Fatal("moment time not equal to expected")
+
+	expectedTime := "00:00"
+	if moment.time != expectedTime {
+		t.Errorf("Moment time not equal to expected. %v %v", moment.time, expectedTime)
 	}
-	if moment.text != "Hello, millenium!" {
-		t.Fatal("moment text not equal to expected")
+
+	expectedText := "Hello, millenium!"
+	if moment.text != expectedText {
+		t.Errorf("Moment text not equal to expected.. %v %v", moment.text, expectedText)
+	}
+
+	expectedTags := []string{"New Year", "Millenium"}
+	if !reflect.DeepEqual(moment.tags, expectedTags) {
+		t.Errorf("Moment tags not equal to expected. %v %v", moment.tags, expectedTags)
+	}
+
+	expectedPeople := []string{"Joe Bloggs", "John Smith"}
+	if !reflect.DeepEqual(moment.people, expectedPeople) {
+		t.Errorf("Moment people not equal to expected. %v %v", moment.people, expectedPeople)
+	}
+
+	expectedPlaces := []string{"Home"}
+	if !reflect.DeepEqual(moment.places, expectedPlaces) {
+		t.Errorf("Moment places not equal to expected. %v %v", moment.places, expectedPlaces)
+	}
+
+	expectedMedia := []string{"/dev/null/MEDIA_005.mp4", "/dev/null/MEDIA_109.jpg"}
+	if !reflect.DeepEqual(moment.media, expectedMedia) {
+		t.Errorf("Moment media not equal to expected. %v %v", moment.media, expectedMedia)
+	}
+
+	// Test Functions
+	expectedISODate := "2000-01-1 00:00"
+	if moment.ISODate() != expectedISODate {
+		t.Errorf("Moment ISODate not equal to expected. %v %v", moment.ISODate(), expectedISODate)
+	}
+
+	if moment.Text() != expectedText {
+		t.Errorf("Moment Text not equal to expected.. %v %v", moment.Text(), expectedText)
+	}
+
+	expectedCombinedTags := []string{"New Year", "Millenium", "Joe Bloggs", "John Smith", "Home"}
+	if !reflect.DeepEqual(moment.Tags(), expectedCombinedTags) {
+		t.Errorf("Moment Tags not equal to expected. %v %v", moment.Tags(), expectedCombinedTags)
+	}
+
+	actualMediaJpg := moment.Media(".jpg")
+	expectedMediaJpg := []string{"/dev/null/MEDIA_109.jpg"}
+	if !reflect.DeepEqual(moment.Media(".jpg"), expectedMediaJpg) {
+		t.Errorf("Moment Media not equal to expected. %v %v", actualMediaJpg, expectedMediaJpg)
 	}
 }
