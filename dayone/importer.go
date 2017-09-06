@@ -3,7 +3,6 @@ package dayone
 import (
 	"fmt"
 	"os/exec"
-	"path"
 )
 
 // DayOne is an interface that defines the contract for an entry in
@@ -39,11 +38,7 @@ func Import(entries []DayOne) {
 		// Images (DayOne2 does not support video at present)
 		if media := m.Media(".jpg"); len(media) > 0 {
 			args = append(args, "-p")
-			for _, image := range media {
-				// TODO: Should Moment expose Path or just filename?
-				absPath := path.Join("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04/Attachments", image)
-				args = append(args, absPath)
-			}
+			args = append(args, media...)
 		}
 
 		// Ignore Standard In (default behaviour if no text argument provided)
