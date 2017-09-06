@@ -30,27 +30,6 @@ func (m *Moment) setText(text string) {
 	m.text = text
 }
 
-func (m *Moment) appendPlace(text string) {
-	text = placeRegex.FindStringSubmatch(text)[1]
-	m.places = append(m.places, text)
-}
-
-func (m *Moment) setPeople(text string) {
-	text = strings.Replace(text, "With: ", "", 1)
-	m.people = strings.Split(text, ", ")
-}
-
-func (m *Moment) setTags(text string) {
-	text = strings.Replace(text, "Tags: ", "", 1)
-	m.tags = strings.Split(text, ", ")
-}
-
-func (m *Moment) appendMedia(mediaPath, text string) {
-	text = strings.Replace(text, "Media: ", "", 1)
-	location := path.Join(mediaPath, text)
-	m.media = append(m.media, location)
-}
-
 func (m *Moment) isValid() bool {
 	return m.date != "" && m.time != ""
 }
@@ -173,14 +152,14 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 			continue
 		}
 
-		if isPlace(text) {
-			m.appendPlace(text)
-		} else if isPeople(text) {
-			m.setPeople(text)
-		} else if isTags(text) {
-			m.setTags(text)
-		} else if isMedia(text) {
-			m.appendMedia(mediaPath, text)
+		if found, place := extractPlace(text); found {
+			m.places = append(m.places, place)
+		} else if found, people := extractPeople(text); found {
+			m.people = people
+		} else if found, tags := extractTags(text); found {
+			m.tags = tags
+		} else if found, media := extractMedia(text, mediaPath); found {
+			m.media = append(m.media, media)
 		} else {
 			buffer.WriteString(text)
 			buffer.WriteString("\n")
@@ -226,18 +205,33 @@ func isTimeCandidate(text string) bool {
 	return len(text) == 5
 }
 
-func isPlace(text string) bool {
-	return strings.HasPrefix(text, "At:")
+func extractPlace(text string) (found bool, place string) {
+	if !strings.HasPrefix(text, "At:") {
+		return
+	}
+	return true, placeRegex.FindStringSubmatch(text)[1]
 }
 
-func isPeople(text string) bool {
-	return strings.HasPrefix(text, "With:")
+func extractPeople(text string) (found bool, people []string) {
+	if !strings.HasPrefix(text, "With:") {
+		return
+	}
+	text = strings.Replace(text, "With: ", "", 1)
+	return true, strings.Split(text, ", ")
 }
 
-func isTags(text string) bool {
-	return strings.HasPrefix(text, "Tags:")
+func extractTags(text string) (found bool, tags []string) {
+	if !strings.HasPrefix(text, "Tags:") {
+		return
+	}
+	text = strings.Replace(text, "Tags: ", "", 1)
+	return true, strings.Split(text, ", ")
 }
 
-func isMedia(text string) bool {
-	return strings.HasPrefix(text, "Media:")
+func extractMedia(text, mediaPath string) (found bool, media string) {
+	if !strings.HasPrefix(text, "Media:") {
+		return
+	}
+	text = strings.Replace(text, "Media: ", "", 1)
+	return true, path.Join(mediaPath, text)
 }
