@@ -97,7 +97,6 @@ var months = map[string]string{
 // Regular Expressions required during Parse.
 var dateRegex = regexp.MustCompile(`[0-9]{1,2}\s[a-zA-Z]{3,9}\s[0-9]{4}`)
 var timeRegex = regexp.MustCompile(`[0-9]{2}:[0-9]{2}`)
-var placeRegex = regexp.MustCompile(`At: ([^:]+)`)
 
 var dateNextLinePrefix = "=========="
 
@@ -111,7 +110,7 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	moments = make([]Moment, 0, 6200)
 	currentDate := ""
 
-	// Buffer to join strings. Much improved performance over naive concatenation (tested at ~90k lines, 20s - 0.1s)
+	// Buffer for string concatenation
 	buffer := bytes.Buffer{}
 
 	scanner := bufio.NewScanner(discardBOM(reader))
@@ -152,6 +151,7 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 			continue
 		}
 
+		// Extract Tags, Media, or append Text
 		if found, place := extractPlace(text); found {
 			m.places = append(m.places, place)
 		} else if found, people := extractPeople(text); found {
@@ -209,29 +209,37 @@ func extractPlace(text string) (found bool, place string) {
 	if !strings.HasPrefix(text, "At:") {
 		return
 	}
-	return true, placeRegex.FindStringSubmatch(text)[1]
+
+	text = strings.TrimPrefix(text, "At: ")
+
+	i := strings.Index(text, ":")
+	if i == -1 {
+		return true, text
+	}
+
+	return true, text[:i]
 }
 
 func extractPeople(text string) (found bool, people []string) {
-	if !strings.HasPrefix(text, "With:") {
+	if !strings.HasPrefix(text, "With: ") {
 		return
 	}
-	text = strings.Replace(text, "With: ", "", 1)
+	text = strings.TrimPrefix(text, "With: ")
 	return true, strings.Split(text, ", ")
 }
 
 func extractTags(text string) (found bool, tags []string) {
-	if !strings.HasPrefix(text, "Tags:") {
+	if !strings.HasPrefix(text, "Tags: ") {
 		return
 	}
-	text = strings.Replace(text, "Tags: ", "", 1)
+	text = strings.TrimPrefix(text, "Tags: ")
 	return true, strings.Split(text, ", ")
 }
 
 func extractMedia(text, mediaPath string) (found bool, media string) {
-	if !strings.HasPrefix(text, "Media:") {
+	if !strings.HasPrefix(text, "Media: ") {
 		return
 	}
-	text = strings.Replace(text, "Media: ", "", 1)
+	text = strings.TrimPrefix(text, "Media: ")
 	return true, path.Join(mediaPath, text)
 }
