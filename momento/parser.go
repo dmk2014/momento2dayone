@@ -3,11 +3,11 @@ package momento
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"path"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // Moment is a represenation of an entry in a Momento journal.
@@ -34,15 +34,12 @@ func (m *Moment) isValid() bool {
 	return m.date != "" && m.time != ""
 }
 
-// ISODate returns an ISO 8601 date.
+// ISODate returns an ISO 8601 date (RFC3339).
 func (m Moment) ISODate() string {
-	// TODO: Currently implements yyyy-mm-dd [hh:mm[:ss]] [AM|PM]
-	// Implement as ISODate
-	dateParts := strings.Split(m.date, " ")
-	day := dateParts[0]
-	month := months[dateParts[1]]
-	year := dateParts[2]
-	return fmt.Sprintf("%s-%s-%s %s", year, month, day, m.time)
+	// TODO: Parse could panic.
+	momentoTime := m.date + " " + m.time
+	t, _ := time.Parse("2 January 2006 03:04", momentoTime)
+	return t.Format(time.RFC3339)
 }
 
 // Text returns the entry content.
@@ -77,21 +74,6 @@ func (m Moment) Media(suffix string) []string {
 		}
 	}
 	return media
-}
-
-var months = map[string]string{
-	"January":   "01",
-	"Feburary":  "02",
-	"March":     "03",
-	"April":     "04",
-	"May":       "05",
-	"June":      "06",
-	"July":      "07",
-	"August":    "08",
-	"September": "09",
-	"October":   "10",
-	"November":  "11",
-	"December":  "12",
 }
 
 // Regular Expressions required during Parse.
