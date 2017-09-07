@@ -36,9 +36,9 @@ func (m *Moment) isValid() bool {
 
 // ISODate returns an ISO 8601 date (RFC3339).
 func (m Moment) ISODate() string {
-	// TODO: Parse could panic.
+	// TODO: Parse could return an error.
 	momentoTime := m.date + " " + m.time
-	t, _ := time.Parse("2 January 2006 03:04", momentoTime)
+	t, _ := time.Parse("_2 January 2006 15:04", momentoTime)
 	return t.Format(time.RFC3339)
 }
 
