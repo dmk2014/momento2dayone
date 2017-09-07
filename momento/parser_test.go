@@ -8,14 +8,14 @@ import (
 
 func TestParse(t *testing.T) {
 	export :=
-		`1 January 2000
+		`5 March 2002
 ==============
 
-00:00
-Hello, millenium!
+03:45
+Hello, Day One!
 With: Joe Bloggs, John Smith
 At: Home: 1 Road Drive, Country (0.00000000, -0.00000000)
-Tags: New Year, Millenium
+Tags: Journaling, First Entry
 Media: MEDIA_005.mp4
 Media: MEDIA_109.jpg`
 
@@ -32,22 +32,22 @@ Media: MEDIA_109.jpg`
 	moment := result[0]
 
 	// Test Basic Properties From Parse
-	expectedDate := "1 January 2000"
+	expectedDate := "5 March 2002"
 	if moment.date != expectedDate {
 		t.Errorf("Moment date not equal to expected. %v %v", moment.date, expectedDate)
 	}
 
-	expectedTime := "00:00"
+	expectedTime := "03:45"
 	if moment.time != expectedTime {
 		t.Errorf("Moment time not equal to expected. %v %v", moment.time, expectedTime)
 	}
 
-	expectedText := "Hello, millenium!"
+	expectedText := "Hello, Day One!"
 	if moment.text != expectedText {
 		t.Errorf("Moment text not equal to expected.. %v %v", moment.text, expectedText)
 	}
 
-	expectedTags := []string{"New Year", "Millenium"}
+	expectedTags := []string{"Journaling", "First Entry"}
 	if !reflect.DeepEqual(moment.tags, expectedTags) {
 		t.Errorf("Moment tags not equal to expected. %v %v", moment.tags, expectedTags)
 	}
@@ -68,7 +68,7 @@ Media: MEDIA_109.jpg`
 	}
 
 	// Test Functions
-	expectedISODate := "2000-01-1 00:00"
+	expectedISODate := "2002-03-05T03:45:00Z"
 	if moment.ISODate() != expectedISODate {
 		t.Errorf("Moment ISODate not equal to expected. %v %v", moment.ISODate(), expectedISODate)
 	}
@@ -77,7 +77,7 @@ Media: MEDIA_109.jpg`
 		t.Errorf("Moment Text not equal to expected.. %v %v", moment.Text(), expectedText)
 	}
 
-	expectedCombinedTags := []string{"New Year", "Millenium", "Joe Bloggs", "John Smith", "Home"}
+	expectedCombinedTags := []string{"Journaling", "First Entry", "Joe Bloggs", "John Smith", "Home"}
 	if !reflect.DeepEqual(moment.Tags(), expectedCombinedTags) {
 		t.Errorf("Moment Tags not equal to expected. %v %v", moment.Tags(), expectedCombinedTags)
 	}
