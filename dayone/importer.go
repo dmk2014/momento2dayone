@@ -27,7 +27,7 @@ func Import(entries []DayOne) {
 		args = append(args, "new")
 		args = append(args, m.Text())
 
-		args = append(args, "-d")
+		args = append(args, "--isoDate")
 		args = append(args, m.ISODate())
 
 		if tags := m.Tags(); len(tags) > 0 {
