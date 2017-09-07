@@ -8,10 +8,10 @@ import (
 
 func TestParse(t *testing.T) {
 	export :=
-		`5 March 2002
+		`13 August 2002
 ==============
 
-03:45
+13:45
 Hello, Day One!
 With: Joe Bloggs, John Smith
 At: Home: 1 Road Drive, Country (0.00000000, -0.00000000)
@@ -32,12 +32,12 @@ Media: MEDIA_109.jpg`
 	moment := result[0]
 
 	// Test Basic Properties From Parse
-	expectedDate := "5 March 2002"
+	expectedDate := "13 August 2002"
 	if moment.date != expectedDate {
 		t.Errorf("Moment date not equal to expected. %v %v", moment.date, expectedDate)
 	}
 
-	expectedTime := "03:45"
+	expectedTime := "13:45"
 	if moment.time != expectedTime {
 		t.Errorf("Moment time not equal to expected. %v %v", moment.time, expectedTime)
 	}
@@ -68,7 +68,7 @@ Media: MEDIA_109.jpg`
 	}
 
 	// Test Functions
-	expectedISODate := "2002-03-05T03:45:00Z"
+	expectedISODate := "2002-08-13T13:45:00Z"
 	if moment.ISODate() != expectedISODate {
 		t.Errorf("Moment ISODate not equal to expected. %v %v", moment.ISODate(), expectedISODate)
 	}
