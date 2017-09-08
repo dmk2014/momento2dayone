@@ -32,16 +32,6 @@ Media: MEDIA_109.jpg`
 	moment := result[0]
 
 	// Test Basic Properties From Parse
-	expectedDate := "13 August 2002"
-	if moment.date != expectedDate {
-		t.Errorf("Moment date not equal to expected. %v %v", moment.date, expectedDate)
-	}
-
-	expectedTime := "13:45"
-	if moment.time != expectedTime {
-		t.Errorf("Moment time not equal to expected. %v %v", moment.time, expectedTime)
-	}
-
 	expectedText := "Hello, Day One!"
 	if moment.text != expectedText {
 		t.Errorf("Moment text not equal to expected.. %v %v", moment.text, expectedText)
