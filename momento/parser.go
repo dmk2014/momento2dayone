@@ -10,10 +10,13 @@ import (
 	"time"
 )
 
+// Date buffer is used to join strings in Moment.setISODate to improve parsing performance.
+var dateBuffer = bytes.Buffer{}
+var momentoDateLayout = "_2 January 2006 15:04"
+
 // Moment is a represenation of an entry in a Momento journal.
 type Moment struct {
-	date   string
-	time   string
+	date   time.Time
 	text   string
 	people []string
 	places []string
@@ -21,9 +24,16 @@ type Moment struct {
 	media  []string
 }
 
-func (m *Moment) setDate(date, time string) {
+func (m *Moment) setISODate(d, t string) (err error) {
+	dateBuffer.WriteString(d)
+	dateBuffer.WriteString(" ")
+	dateBuffer.WriteString(t)
+	defer dateBuffer.Reset()
+
+	date, err := time.Parse(momentoDateLayout, dateBuffer.String())
 	m.date = date
-	m.time = time
+
+	return
 }
 
 func (m *Moment) setText(text string) {
@@ -31,15 +41,12 @@ func (m *Moment) setText(text string) {
 }
 
 func (m *Moment) isValid() bool {
-	return m.date != "" && m.time != ""
+	return !m.date.IsZero()
 }
 
 // ISODate returns an ISO 8601 date (RFC3339).
 func (m Moment) ISODate() string {
-	// TODO: Parse could return an error.
-	momentoTime := m.date + " " + m.time
-	t, _ := time.Parse("_2 January 2006 15:04", momentoTime)
-	return t.Format(time.RFC3339)
+	return m.date.Format(time.RFC3339)
 }
 
 // Text returns the entry content.
@@ -127,7 +134,9 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 
 			// New Moment
 			m = Moment{}
-			m.setDate(currentDate, text)
+			if err = m.setISODate(currentDate, text); err != nil {
+				return
+			}
 			buffer.Reset()
 
 			continue
