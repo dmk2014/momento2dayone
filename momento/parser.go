@@ -170,6 +170,62 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	return
 }
 
+func isDateCandidate(text string) bool {
+	return len(text) >= 10 && len(text) <= 17
+}
+
+func isTimeCandidate(text string) bool {
+	return len(text) == 5
+}
+
+// The below helper functions are used to extract metadata from the Momento export.
+var placePrefix = "At: "
+var peoplePrefix = "With: "
+var tagsPrefix = "Tags: "
+var mediaPrefix = "Media: "
+var commaSeparator = ", "
+var semicolon = ":"
+
+func extractPlace(text string) (found bool, place string) {
+	if !strings.HasPrefix(text, placePrefix) {
+		return
+	}
+
+	text = strings.TrimPrefix(text, placePrefix)
+
+	i := strings.Index(text, semicolon)
+	if i == -1 {
+		return true, text
+	}
+
+	return true, text[:i]
+}
+
+func extractPeople(text string) (found bool, people []string) {
+	if !strings.HasPrefix(text, peoplePrefix) {
+		return
+	}
+	text = strings.TrimPrefix(text, peoplePrefix)
+	return true, strings.Split(text, commaSeparator)
+}
+
+func extractTags(text string) (found bool, tags []string) {
+	if !strings.HasPrefix(text, tagsPrefix) {
+		return
+	}
+	text = strings.TrimPrefix(text, tagsPrefix)
+	return true, strings.Split(text, commaSeparator)
+}
+
+func extractMedia(text, mediaPath string) (found bool, media string) {
+	if !strings.HasPrefix(text, mediaPrefix) {
+		return
+	}
+	text = strings.TrimPrefix(text, mediaPrefix)
+	return true, path.Join(mediaPath, text)
+}
+
+// discardBOM removes the BOM, if present, from the provided io.Reader.
 func discardBOM(reader io.Reader) io.Reader {
 	const (
 		bom0 = 0xEF
@@ -186,51 +242,4 @@ func discardBOM(reader io.Reader) io.Reader {
 	}
 
 	return buffer
-}
-
-func isDateCandidate(text string) bool {
-	return len(text) >= 10 && len(text) <= 17
-}
-
-func isTimeCandidate(text string) bool {
-	return len(text) == 5
-}
-
-func extractPlace(text string) (found bool, place string) {
-	if !strings.HasPrefix(text, "At:") {
-		return
-	}
-
-	text = strings.TrimPrefix(text, "At: ")
-
-	i := strings.Index(text, ":")
-	if i == -1 {
-		return true, text
-	}
-
-	return true, text[:i]
-}
-
-func extractPeople(text string) (found bool, people []string) {
-	if !strings.HasPrefix(text, "With: ") {
-		return
-	}
-	text = strings.TrimPrefix(text, "With: ")
-	return true, strings.Split(text, ", ")
-}
-
-func extractTags(text string) (found bool, tags []string) {
-	if !strings.HasPrefix(text, "Tags: ") {
-		return
-	}
-	text = strings.TrimPrefix(text, "Tags: ")
-	return true, strings.Split(text, ", ")
-}
-
-func extractMedia(text, mediaPath string) (found bool, media string) {
-	if !strings.HasPrefix(text, "Media: ") {
-		return
-	}
-	text = strings.TrimPrefix(text, "Media: ")
-	return true, path.Join(mediaPath, text)
 }
