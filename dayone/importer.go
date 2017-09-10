@@ -22,6 +22,8 @@ func Import(entries []DayOne) {
 			break
 		}
 
+		fmt.Printf("\rDayOne Import Running (%d of %d)", i+1, len(entries))
+
 		args := make([]string, 0, 20)
 
 		args = append(args, "new")
@@ -29,6 +31,9 @@ func Import(entries []DayOne) {
 
 		args = append(args, "--isoDate")
 		args = append(args, m.ISODate())
+
+		args = append(args, "-z")
+		args = append(args, "UTC")
 
 		if tags := m.Tags(); len(tags) > 0 {
 			args = append(args, "-t")
@@ -45,11 +50,6 @@ func Import(entries []DayOne) {
 		args = append(args, "--no-stdin")
 
 		cmd := exec.Command("dayone2", args...)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			// TODO: We will continue, log output/error
-			fmt.Println(string(output))
-			fmt.Println(err)
-		}
+		cmd.CombinedOutput()
 	}
 }
