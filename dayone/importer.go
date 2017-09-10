@@ -2,7 +2,9 @@ package dayone
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"time"
 )
 
 // DayOne is an interface that defines the contract for an entry in
@@ -16,7 +18,14 @@ type DayOne interface {
 
 // Import iterates over the provided entries and utilizes the dayone2
 // CLI to add them to DayOne.
-func Import(entries []DayOne) {
+func Import(entries []DayOne) (err error) {
+	log, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
+	if err != nil {
+		return
+	}
+
+	imported, errors := 0, 0
+
 	for i, m := range entries {
 		if i > 10 {
 			break
@@ -50,6 +59,23 @@ func Import(entries []DayOne) {
 		args = append(args, "--no-stdin")
 
 		cmd := exec.Command("dayone2", args...)
-		cmd.CombinedOutput()
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			writeLog(log, m, output)
+			errors++
+			continue
+		}
+
+		imported++
 	}
+
+	fmt.Println()
+
+	return
+}
+
+func writeLog(file *os.File, entry DayOne, output []byte) {
+	file.WriteString(time.Now().Format("2006-01-02 15:04:05") + " Entry could not be imported. (" + entry.ISODate() + ")")
+	file.WriteString("\n\n")
+	file.WriteString(string(output))
 }
