@@ -13,11 +13,7 @@ import (
 )
 
 func main() {
-	// TODO
-	// Retrieve arguments from command line instead of hard coding
-	// Validate that file exists
-	// Investigate image validation, approach if image not found
-	// Check for images that exist and are not used?
+	// TODO: Retrieve arguments from command line instead of hard coding
 
 	if runtime.GOOS != "darwin" {
 		fmt.Printf("macOS Required...")
@@ -29,7 +25,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	// Parse File
+	// Parse Momento Export
 	basePath := "/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04"
 	exportPath := path.Join(basePath, "Export.txt")
 	mediaPath := path.Join(basePath, "Attachments")
@@ -67,9 +63,13 @@ func main() {
 	}
 
 	start = time.Now()
-	dayone.Import(entries)
+	err = dayone.Import(entries)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(5)
+	}
 	duration = time.Since(start)
-	fmt.Printf("Import Complete (%fs)\n", duration.Seconds())
+	fmt.Printf("Import Complete (%fs). \n", duration.Seconds())
 
 	os.Exit(0)
 }
