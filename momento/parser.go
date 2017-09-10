@@ -24,13 +24,13 @@ type Moment struct {
 	media  []string
 }
 
-func (m *Moment) setISODate(d, t string) (err error) {
+func (m *Moment) setDate(d, t string) (err error) {
 	dateBuffer.WriteString(d)
 	dateBuffer.WriteString(" ")
 	dateBuffer.WriteString(t)
 	defer dateBuffer.Reset()
 
-	date, err := time.Parse(momentoDateLayout, dateBuffer.String())
+	date, err := time.ParseInLocation(momentoDateLayout, dateBuffer.String(), time.UTC)
 	m.date = date
 
 	return
@@ -134,7 +134,7 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 
 			// New Moment
 			m = Moment{}
-			if err = m.setISODate(currentDate, text); err != nil {
+			if err = m.setDate(currentDate, text); err != nil {
 				return
 			}
 			buffer.Reset()
