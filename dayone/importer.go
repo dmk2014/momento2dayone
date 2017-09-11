@@ -68,6 +68,8 @@ func Import(entries []DayOne) {
 		imported++
 	}
 
+	fmt.Println()
+
 	duration := time.Since(start)
 	log.Printf("DayOne Import Complete. Imported: %d, Errors: %d. Imported in %q.", imported, errors, duration.String())
 }
