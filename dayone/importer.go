@@ -2,7 +2,7 @@ package dayone
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"os/exec"
 	"time"
 )
@@ -18,20 +18,18 @@ type DayOne interface {
 
 // Import iterates over the provided entries and utilizes the dayone2
 // CLI to add them to DayOne.
-func Import(entries []DayOne) (err error) {
-	log, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
-	if err != nil {
-		return
-	}
-
+func Import(entries []DayOne) {
 	imported, errors := 0, 0
+
+	log.Printf("DayOne Import Starting. %d Entries.", len(entries))
+	start := time.Now()
 
 	for i, m := range entries {
 		if i > 10 {
 			break
 		}
 
-		fmt.Printf("\rDayOne Import Running (%d of %d)", i+1, len(entries))
+		fmt.Printf("\rDayOne Import Running - Entry %d of %d.", i+1, len(entries))
 
 		args := make([]string, 0, 20)
 
@@ -61,21 +59,15 @@ func Import(entries []DayOne) (err error) {
 		cmd := exec.Command("dayone2", args...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			writeLog(log, m, output)
 			errors++
+			log.Printf("Entry with date %q could not be imported.", m.ISODate())
+			log.Printf(string(output))
 			continue
 		}
 
 		imported++
 	}
 
-	fmt.Println()
-
-	return
-}
-
-func writeLog(file *os.File, entry DayOne, output []byte) {
-	file.WriteString(time.Now().Format("2006-01-02 15:04:05") + " Entry could not be imported. (" + entry.ISODate() + ")")
-	file.WriteString("\n\n")
-	file.WriteString(string(output))
+	duration := time.Since(start)
+	log.Printf("DayOne Import Complete. Imported: %d, Errors: %d. Imported in %q.", imported, errors, duration.String())
 }

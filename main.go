@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
 	"runtime"
-	"time"
 
 	"github.com/dmk2014/momento2dayone/dayone"
 	"github.com/dmk2014/momento2dayone/momento"
@@ -15,14 +14,18 @@ import (
 func main() {
 	// TODO: Retrieve arguments from command line instead of hard coding
 
+	if err := initializeLog(); err != nil {
+		log.Fatal("Logger could not be initialized.")
+	}
+
+	log.Print("Momento2DayOne Session Beginning.")
+
 	if runtime.GOOS != "darwin" {
-		fmt.Printf("macOS Required...")
-		os.Exit(1)
+		log.Fatal("macOS Required (this is the only platform on which the Day One CLI is available).")
 	}
 	if err := exec.Command("dayone2").Run(); err != nil {
-		fmt.Printf("dayone2 not found. Append more info, link to install instructions...")
-		fmt.Println(err)
-		os.Exit(2)
+		log.Fatalf("Day One CLI not found. See %q for install instructions.",
+			"http://help.dayoneapp.com/day-one-2-0/command-line-interface-cli")
 	}
 
 	// Parse Momento Export
@@ -32,28 +35,21 @@ func main() {
 
 	file, err := os.Open(exportPath)
 	if err != nil {
-		fmt.Printf("could not open Momento export")
-		os.Exit(3)
+		log.Fatal("Momento export could not be opened. Verify path and try again.")
 	}
 	defer file.Close()
 
-	start := time.Now()
 	moments, err := momento.Parse(file, mediaPath)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(4)
+		log.Fatal(err)
 	}
-	duration := time.Since(start)
-	fmt.Printf("Parse Complete (%fs)\n", duration.Seconds())
 
-	fmt.Printf("Moments Found: %d\n", len(moments))
 	expectedMoments := 6134
 	if expectedMoments != len(moments) {
 		// TODO
 	}
 
 	// Import to DayOne
-
 	// https://npf.io/2014/05/intro-to-go-interfaces/
 	// https://stackoverflow.com/questions/12994679/golang-slice-of-struct-slice-of-interface-it-implements
 	// TODO: research pointer receivers, conversion and duplication issue when using &m
@@ -62,14 +58,18 @@ func main() {
 		entries[i] = dayone.DayOne(m)
 	}
 
-	start = time.Now()
-	err = dayone.Import(entries)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(5)
-	}
-	duration = time.Since(start)
-	fmt.Printf("Import Complete (%fs). \n", duration.Seconds())
+	dayone.Import(entries)
 
 	os.Exit(0)
+}
+
+func initializeLog() (err error) {
+	file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return
+	}
+
+	log.SetOutput(file)
+
+	return
 }

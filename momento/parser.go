@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"log"
 	"path"
 	"regexp"
 	"strings"
@@ -101,8 +102,11 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 
 	// Buffer for string concatenation
 	buffer := bytes.Buffer{}
-
 	scanner := bufio.NewScanner(discardBOM(reader))
+
+	log.Print("Momento Parse Starting.")
+	start := time.Now()
+
 	for scanner.Scan() {
 		text := scanner.Text()
 
@@ -135,6 +139,8 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 			// New Moment
 			m = Moment{}
 			if err = m.setDate(currentDate, text); err != nil {
+				log.Printf("Momento Parse Failed. Unable to read date %q, time %q.", currentDate, text)
+				log.Print(err)
 				return
 			}
 			buffer.Reset()
@@ -164,8 +170,13 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	}
 
 	if err = scanner.Err(); err != nil {
+		log.Print("Momento Parse Failed. Error encountered while scanning io.Reader.")
+		log.Print(err)
 		return
 	}
+
+	duration := time.Since(start)
+	log.Printf("Momento Parse Complete. %d entries found. Parsed in %q.", len(moments), duration.String())
 
 	return
 }
