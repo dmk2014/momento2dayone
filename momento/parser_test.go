@@ -1,6 +1,7 @@
 package momento
 
 import (
+	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ func TestParse(t *testing.T) {
 Hello, Day One!
 With: Joe Bloggs, John Smith
 At: Home: 1 Road Drive, Country (0.00000000, -0.00000000)
+At: Work
 Tags: Journaling, First Entry
 Media: MEDIA_005.mp4
 Media: MEDIA_109.jpg`
@@ -26,7 +28,7 @@ Media: MEDIA_109.jpg`
 	}
 
 	if len(result) != 1 {
-		t.Fatalf("Moment count not equal to expected. %d %d", 1, len(result))
+		t.Fatalf("Moment count not equal to expected. %d %d", len(result), 1)
 	}
 
 	moment := result[0]
@@ -47,7 +49,7 @@ Media: MEDIA_109.jpg`
 		t.Errorf("Moment people not equal to expected. %v %v", moment.people, expectedPeople)
 	}
 
-	expectedPlaces := []string{"Home"}
+	expectedPlaces := []string{"Home", "Work"}
 	if !reflect.DeepEqual(moment.places, expectedPlaces) {
 		t.Errorf("Moment places not equal to expected. %v %v", moment.places, expectedPlaces)
 	}
@@ -67,7 +69,7 @@ Media: MEDIA_109.jpg`
 		t.Errorf("Moment Text not equal to expected.. %v %v", moment.Text(), expectedText)
 	}
 
-	expectedCombinedTags := []string{"Journaling", "First Entry", "Joe Bloggs", "John Smith", "Home"}
+	expectedCombinedTags := []string{"Journaling", "First Entry", "Joe Bloggs", "John Smith", "Home", "Work"}
 	if !reflect.DeepEqual(moment.Tags(), expectedCombinedTags) {
 		t.Errorf("Moment Tags not equal to expected. %v %v", moment.Tags(), expectedCombinedTags)
 	}
@@ -76,5 +78,72 @@ Media: MEDIA_109.jpg`
 	expectedMediaJpg := []string{"/dev/null/MEDIA_109.jpg"}
 	if !reflect.DeepEqual(moment.Media(".jpg"), expectedMediaJpg) {
 		t.Errorf("Moment Media not equal to expected. %v %v", actualMediaJpg, expectedMediaJpg)
+	}
+}
+
+func TestEmptyMoment(t *testing.T) {
+	export :=
+		`13 August 2002
+==============
+
+13:45`
+
+	reader := strings.NewReader(export)
+	result, err := Parse(reader, "/dev/null")
+	if err != nil {
+		t.Fatalf("Parse error. %v", err)
+	}
+
+	moment := result[0]
+
+	if moment.text != "" {
+		t.Error("Moment text was not empty.")
+	}
+
+	if moment.tags != nil {
+		t.Error("Moment tags not nil.")
+	}
+
+	if moment.people != nil {
+		t.Error("Moment people not nil.")
+	}
+
+	if moment.places != nil {
+		t.Error("Moment places not nil.")
+	}
+
+	if moment.media != nil {
+		t.Error("Moment media not nil.")
+	}
+
+	actualEmptyMedia := moment.Media(".jpg")
+	expectedEmptyMedia := []string{}
+	if !reflect.DeepEqual(moment.Media(".jpg"), expectedEmptyMedia) {
+		t.Errorf("Moment Media not equal to expected. %v %v", actualEmptyMedia, expectedEmptyMedia)
+	}
+}
+
+func TestInvalidDate(t *testing.T) {
+	export :=
+		`13 Augusted 2002
+==============
+
+13:45`
+
+	reader := strings.NewReader(export)
+	_, err := Parse(reader, "/dev/null")
+	if err == nil {
+		t.Error("Parse error nil.")
+	}
+}
+
+func TestDiscardBom(t *testing.T) {
+	bom := []byte{0xEF, 0xBB, 0xBF}
+
+	reader := bytes.NewReader(bom)
+	discardBOM(reader)
+
+	if reader.Len() != 0 {
+		t.Errorf("Reader length not equal to expected. %d %d", reader.Len(), 0)
 	}
 }
