@@ -88,8 +88,6 @@ func (m Moment) Media(suffix string) []string {
 var dateRegex = regexp.MustCompile(`[0-9]{1,2}\s[a-zA-Z]{3,9}\s[0-9]{4}`)
 var timeRegex = regexp.MustCompile(`[0-9]{2}:[0-9]{2}`)
 
-var dateNextLinePrefix = "=========="
-
 // Parse extracts any Moments from the provided io.Reader and returns
 // them in a slice. The media path should be a location containing all
 // media files encountered during parse. This location is not validated.
@@ -110,19 +108,17 @@ func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	for scanner.Scan() {
 		text := scanner.Text()
 
-		// Assumes no Date/Time will exist within Moment text
+		// Assumes a Date/Time will never be found within Moment text
 		switch {
 		case isDateCandidate(text):
 			if !dateRegex.MatchString(text) {
 				break
 			}
 
-			scanner.Scan()
-			nextLine := scanner.Text()
-			if !strings.HasPrefix(nextLine, dateNextLinePrefix) {
-				break
-			}
 			currentDate = text
+
+			// Skip "=======" line
+			scanner.Scan()
 
 			continue
 		case isTimeCandidate(text):
