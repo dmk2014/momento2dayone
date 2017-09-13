@@ -58,24 +58,15 @@ func (m Moment) Text() string {
 // Tags returns a combined slice of Tags, People and Places.
 func (m Moment) Tags() []string {
 	tags := make([]string, 0, len(m.tags)+len(m.people)+len(m.places))
-	if len(m.tags) > 0 {
-		tags = append(tags, m.tags...)
-	}
-	if len(m.people) > 0 {
-		tags = append(tags, m.people...)
-	}
-	if len(m.places) > 0 {
-		tags = append(tags, m.places...)
-	}
+	tags = append(tags, m.tags...)
+	tags = append(tags, m.people...)
+	tags = append(tags, m.places...)
 	return tags
 }
 
 // Media returns a slice of all media that ends with the specified suffix.
 func (m Moment) Media(suffix string) []string {
 	media := make([]string, 0, len(m.media))
-	if len(m.media) == 0 {
-		return media
-	}
 	for _, m := range m.media {
 		if strings.HasSuffix(m, suffix) {
 			media = append(media, m)
