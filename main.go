@@ -59,7 +59,7 @@ func parseMomentoExport(basePath string) []momento.Moment {
 	mediaPath := path.Join(basePath, "Attachments")
 
 	if _, err := os.Stat(mediaPath); err != nil {
-		log.Fatalf("Momento attachments path could not be verified.")
+		log.Fatalf("Attachments path (%s) could not be verified.", mediaPath)
 	}
 
 	file, err := os.Open(exportPath)
