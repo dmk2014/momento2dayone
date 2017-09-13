@@ -22,6 +22,11 @@ func main() {
 	validateRuntime()
 
 	moments := parseMomentoExport("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04")
+	expected := 6134
+	if expected != len(moments) {
+		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
+	}
+
 	importToDayOne(moments)
 
 	log.Print("Momento2DayOne Session Exiting Successfully.")
@@ -51,7 +56,11 @@ func validateRuntime() {
 
 func parseMomentoExport(basePath string) []momento.Moment {
 	exportPath := path.Join(basePath, "Export.txt")
-	mediaPath := path.Join(basePath, "Attachments") // TODO: Ensure path exists.
+	mediaPath := path.Join(basePath, "Attachments")
+
+	if _, err := os.Stat(mediaPath); err != nil {
+		log.Fatalf("Momento attachments path could not be verified.")
+	}
 
 	file, err := os.Open(exportPath)
 	if err != nil {
@@ -62,11 +71,6 @@ func parseMomentoExport(basePath string) []momento.Moment {
 	moments, err := momento.Parse(file, mediaPath)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	expected := 6134
-	if expected != len(moments) {
-		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
 	}
 
 	return moments
