@@ -31,12 +31,12 @@ func main() {
 	if err != nil {
 		log.Fatal("Momento parse failed.")
 	}
-
 	if *expected < 0 && *expected != len(moments) {
 		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
 	}
 
-	importToDayOne(moments)
+	entries := convertMomentToDayOne(moments)
+	dayone.Import(entries)
 
 	log.Print("Momento2DayOne Session Exiting Successfully.")
 	os.Exit(0)
@@ -63,7 +63,7 @@ func validateRuntime() {
 	}
 }
 
-func importToDayOne(moments []momento.Moment) {
+func convertMomentToDayOne(moments []momento.Moment) []dayone.DayOne {
 	// https://npf.io/2014/05/intro-to-go-interfaces/
 	// https://stackoverflow.com/questions/12994679/golang-slice-of-struct-slice-of-interface-it-implements
 	// TODO: research pointer receivers, conversion and duplication issue when using &m
@@ -71,6 +71,5 @@ func importToDayOne(moments []momento.Moment) {
 	for i, m := range moments {
 		entries[i] = dayone.DayOne(m)
 	}
-
-	dayone.Import(entries)
+	return entries
 }
