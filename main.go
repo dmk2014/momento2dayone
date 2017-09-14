@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/exec"
@@ -12,7 +13,13 @@ import (
 )
 
 func main() {
-	// TODO: Retrieve arguments from command line instead of hard coding
+	exportPath := flag.String("path",
+		"/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04",
+		"The Momento export path, containing Export.txt and attachments directory.")
+	expected := flag.Int("count",
+		6134,
+		"The number of entries that should be parsed from the Momento export file. Negative values are ignored.")
+	flag.Parse()
 
 	if err := initializeLog(); err != nil {
 		log.Fatal("Logger could not be initialized.")
@@ -21,9 +28,8 @@ func main() {
 
 	validateRuntime()
 
-	moments := parseMomentoExport("/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04")
-	expected := 6134
-	if expected != len(moments) {
+	moments := parseMomentoExport(*exportPath)
+	if *expected < 0 && *expected != len(moments) {
 		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
 	}
 
