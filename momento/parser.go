@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"log"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -78,6 +79,31 @@ func (m Moment) Media(suffix string) []string {
 // Regular Expressions required during Parse.
 var dateRegex = regexp.MustCompile(`[0-9]{1,2}\s[a-zA-Z]{3,9}\s[0-9]{4}`)
 var timeRegex = regexp.MustCompile(`[0-9]{2}:[0-9]{2}`)
+
+// ParseFile is a convenience function for Parse. It accepts the base path
+// of a Momento export. This path should be a directory containing a text
+// file and an attachments directory. The text file should be named
+// Export.txt. The attachments directory is only verified to exist - it's
+// contents are not checked during parse.
+func ParseFile(basePath string) (moments []Moment, err error) {
+	exportPath := path.Join(basePath, "Export.txt")
+	mediaPath := path.Join(basePath, "Attachments")
+
+	if _, err = os.Stat(mediaPath); err != nil {
+		log.Printf("Attachments path (%s) could not be verified.", mediaPath)
+		return
+	}
+
+	file, err := os.Open(exportPath)
+	if err != nil {
+		log.Print("Export.txt could not be opened.")
+		log.Print(err)
+		return
+	}
+	defer file.Close()
+
+	return Parse(file, mediaPath)
+}
 
 // Parse extracts any Moments from the provided io.Reader and returns
 // them in a slice. The media path should be a location containing all
