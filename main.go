@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"runtime"
 
 	"github.com/dmk2014/momento2dayone/dayone"
@@ -28,7 +27,11 @@ func main() {
 
 	validateRuntime()
 
-	moments := parseMomentoExport(*exportPath)
+	moments, err := momento.ParseFile(*exportPath)
+	if err != nil {
+		log.Fatal("Momento parse failed.")
+	}
+
 	if *expected < 0 && *expected != len(moments) {
 		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
 	}
@@ -58,28 +61,6 @@ func validateRuntime() {
 		log.Fatalf("Day One CLI not found. See %q for install instructions.",
 			"http://help.dayoneapp.com/day-one-2-0/command-line-interface-cli")
 	}
-}
-
-func parseMomentoExport(basePath string) []momento.Moment {
-	exportPath := path.Join(basePath, "Export.txt")
-	mediaPath := path.Join(basePath, "Attachments")
-
-	if _, err := os.Stat(mediaPath); err != nil {
-		log.Fatalf("Attachments path (%s) could not be verified.", mediaPath)
-	}
-
-	file, err := os.Open(exportPath)
-	if err != nil {
-		log.Fatal("Momento export could not be opened. Verify path and try again.")
-	}
-	defer file.Close()
-
-	moments, err := momento.Parse(file, mediaPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return moments
 }
 
 func importToDayOne(moments []momento.Moment) {
