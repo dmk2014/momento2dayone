@@ -13,10 +13,10 @@ import (
 
 func main() {
 	exportPath := flag.String("path",
-		"/Users/darren/Desktop/Momento Export 2017-08-13 16_27_04",
+		"/dev/null",
 		"The Momento export path, containing Export.txt and attachments directory.")
 	expected := flag.Int("count",
-		6134,
+		-1,
 		"The number of entries that should be parsed from the Momento export file. Negative values are ignored.")
 	flag.Parse()
 
