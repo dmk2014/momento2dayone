@@ -40,7 +40,6 @@ func main() {
 	entries := convertMomentToDayOne(moments)
 	dayone.Import(entries)
 
-	log.Print("Momento2DayOne Session Exiting Successfully.")
 	os.Exit(0)
 }
 
