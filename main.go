@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Momento parse failed.")
 	}
-	if *expected < 0 && *expected != len(moments) {
+	if *expected >= 0 && *expected != len(moments) {
 		log.Fatalf("Moment count mismatch. Expected: %d. Actual: %d.", expected, len(moments))
 	}
 
