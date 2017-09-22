@@ -25,7 +25,9 @@ func main() {
 	}
 	log.Print("Momento2DayOne Session Beginning.")
 
-	validateRuntime()
+	if !isEnvironmentValid() {
+		log.Fatal("Invalid runtime environment.")
+	}
 
 	moments, err := momento.ParseFile(*exportPath)
 	if err != nil {
@@ -53,14 +55,17 @@ func initializeLog() (err error) {
 	return
 }
 
-func validateRuntime() {
+func isEnvironmentValid() bool {
 	if runtime.GOOS != "darwin" {
-		log.Fatal("macOS Required (this is the only platform on which the Day One CLI is available).")
+		log.Println("macOS Required (this is the only platform on which the Day One CLI is available).")
+		return false
 	}
 	if err := exec.Command("dayone2").Run(); err != nil {
-		log.Fatalf("Day One CLI not found. See %q for install instructions.",
+		log.Printf("Day One CLI not found. See %q for install instructions.",
 			"http://help.dayoneapp.com/day-one-2-0/command-line-interface-cli")
+		return false
 	}
+	return true
 }
 
 func convertMomentToDayOne(moments []momento.Moment) []dayone.DayOne {
