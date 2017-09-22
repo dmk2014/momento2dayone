@@ -25,10 +25,6 @@ func Import(entries []DayOne) {
 	start := time.Now()
 
 	for i, m := range entries {
-		if i > 10 {
-			break
-		}
-
 		fmt.Printf("\rDayOne Import Running - Entry %d of %d.", i+1, len(entries))
 
 		args := make([]string, 0, 20)
