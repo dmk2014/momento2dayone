@@ -89,11 +89,6 @@ func ParseFile(basePath string) (moments []Moment, err error) {
 	exportPath := path.Join(basePath, "Export.txt")
 	mediaPath := path.Join(basePath, "Attachments")
 
-	if _, err = os.Stat(mediaPath); err != nil {
-		log.Printf("Attachments path (%s) could not be verified.", mediaPath)
-		return
-	}
-
 	file, err := os.Open(exportPath)
 	if err != nil {
 		log.Print("Export.txt could not be opened.")
@@ -101,6 +96,11 @@ func ParseFile(basePath string) (moments []Moment, err error) {
 		return
 	}
 	defer file.Close()
+
+	if _, err = os.Stat(mediaPath); err != nil {
+		log.Printf("Attachments path (%s) could not be verified.", mediaPath)
+		return
+	}
 
 	return Parse(file, mediaPath)
 }
