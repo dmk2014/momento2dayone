@@ -112,7 +112,7 @@ func ParseFile(basePath string) (moments []Moment, err error) {
 // io.Reader contents.
 func Parse(reader io.Reader, mediaPath string) (moments []Moment, err error) {
 	m := Moment{}
-	moments = make([]Moment, 0, 6200)
+	moments = make([]Moment, 0, 10000)
 	currentDate := ""
 
 	// Buffer for string concatenation
