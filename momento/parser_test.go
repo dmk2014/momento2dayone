@@ -17,6 +17,7 @@ Hello, Day One!
 With: Joe Bloggs, John Smith
 At: Home: 1 Road Drive, Country (0.00000000, -0.00000000)
 At: Work
+At: No SemiColon (52.5003935973697, -9.52393457342944)
 Tags: Journaling, First Entry
 Media: MEDIA_005.mp4
 Media: MEDIA_109.jpg`
@@ -49,7 +50,7 @@ Media: MEDIA_109.jpg`
 		t.Errorf("Moment people not equal to expected. %v %v", moment.people, expectedPeople)
 	}
 
-	expectedPlaces := []string{"Home", "Work"}
+	expectedPlaces := []string{"Home", "Work", "No SemiColon"}
 	if !reflect.DeepEqual(moment.places, expectedPlaces) {
 		t.Errorf("Moment places not equal to expected. %v %v", moment.places, expectedPlaces)
 	}
@@ -69,7 +70,7 @@ Media: MEDIA_109.jpg`
 		t.Errorf("Moment Text not equal to expected.. %v %v", moment.Text(), expectedText)
 	}
 
-	expectedCombinedTags := []string{"Journaling", "First Entry", "Joe Bloggs", "John Smith", "Home", "Work"}
+	expectedCombinedTags := []string{"Journaling", "First Entry", "Joe Bloggs", "John Smith", "Home", "Work", "No SemiColon"}
 	if !reflect.DeepEqual(moment.Tags(), expectedCombinedTags) {
 		t.Errorf("Moment Tags not equal to expected. %v %v", moment.Tags(), expectedCombinedTags)
 	}

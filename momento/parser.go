@@ -209,6 +209,7 @@ var tagsPrefix = "Tags: "
 var mediaPrefix = "Media: "
 var commaSeparator = ", "
 var semicolon = ":"
+var leftParentheses = "("
 
 func extractPlace(text string) (found bool, place string) {
 	if !strings.HasPrefix(text, placePrefix) {
@@ -218,11 +219,16 @@ func extractPlace(text string) (found bool, place string) {
 	text = strings.TrimPrefix(text, placePrefix)
 
 	i := strings.Index(text, semicolon)
-	if i == -1 {
-		return true, text
+	if i != -1 {
+		return true, text[:i]
 	}
 
-	return true, text[:i]
+	i = strings.Index(text, leftParentheses)
+	if i != -1 {
+		return true, strings.TrimSpace(text[:i])
+	}
+
+	return true, text
 }
 
 func extractPeople(text string) (found bool, people []string) {
