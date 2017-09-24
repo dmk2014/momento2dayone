@@ -62,6 +62,10 @@ func Import(entries []DayOne) {
 		}
 
 		imported++
+
+		if (i+1)%100 == 0 {
+			time.Sleep(time.Second * 10)
+		}
 	}
 
 	fmt.Println()
