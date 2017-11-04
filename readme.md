@@ -22,11 +22,9 @@ sudo /Applications/Day\ One.app/Contents/Resources/install_cli.sh
 ```
 
 ## General
-
 Momento Tags, People and Places all become Tags in Day One. Geolocation information on places is not maintained during import.
 
 ## Verify Backup
-
 Using a Momento backup file (SQLite), the data can be verified. There cannot be any dates that match the below regular expression on a single line.
 
 ```sql
@@ -47,6 +45,7 @@ WHERE ZNOTES REGEXP '[0-9]{2}:[0-9]{2}'
 The parser is fast - it completes a ~90k line text file with about 6200 entries in less than 100ms. It returns a slice of Moments which satisfy the interface expected by the import package.
 
 ## Importer
-The import will take some time. It must process each entry sequentially. There was an issue encountered during testing where photos were not correctly imported. This was fixed by having the import function wait for 10 seconds every 100 entries.
+The import will take some time. It must process each entry sequentially. Import progress is displayed on the command line.
 
-Import progress is displayed on the command line.
+## Known Issues
+There was an issue encountered during testing where photos were not correctly imported. Images failed to import correctly as the journal size grew in Day One. Unfortunately this could not be resolved programatically - the images had to be manually corrected by editing the Day One entries when the import was completed.
